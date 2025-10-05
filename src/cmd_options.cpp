@@ -19,8 +19,7 @@ bool ProgramOptions::Parse(int argc, char *argv[]) {
     try {        
         po::store(po::parse_command_line(argc, argv, desc_), vm_);        
 
-        if (vm_.count("help")) {
-            std::cout << desc_ << "\n";
+        if (vm_.count("help")) {            
             helpRequested_ = true;
             return true;
         }
@@ -35,6 +34,10 @@ bool ProgramOptions::Parse(int argc, char *argv[]) {
         return false;
     }
     return true;
+}
+
+void ProgramOptions::printHelp(){
+    std::cout << desc_ << "\n";
 }
 
 }  // namespace CryptoGuard

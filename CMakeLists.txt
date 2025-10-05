@@ -52,3 +52,4 @@ target_include_directories(${PROJECT_NAME}_tests PRIVATE ${CMAKE_CURRENT_SOURCE_
 # Включаем тестирование
 enable_testing()
 add_test(NAME CryptoGuard_Tests COMMAND ${PROJECT_NAME}_tests)
+add_test(NAME CmdOptions_Tests COMMAND cmd_options_tests)

@@ -27,6 +27,8 @@ public:
     std::string GetPassword() const { return password_; }
 
     bool isHelpRequested() const { return helpRequested_; }
+
+    void printHelp();
 private:
     COMMAND_TYPE command_;
 

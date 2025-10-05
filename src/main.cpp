@@ -36,31 +36,15 @@ AesCipherParams CreateChiperParamsFromPassword(std::string_view password) {
 int main(int argc, char *argv[]) {
 
     CryptoGuard::ProgramOptions po;
-    
+
     if (!po.Parse(argc, argv))
         return 0;
 
-    if (po.isHelpRequested())
-        return 0;   
-
-    switch (po.GetCommand()) {
-        case CryptoGuard::ProgramOptions::COMMAND_TYPE::ENCRYPT:
-            std::cout << "ENCRYPT" << std::endl;
-            break;
-        case CryptoGuard::ProgramOptions::COMMAND_TYPE::DECRYPT:
-            std::cout << "DECRYPT" << std::endl;
-            break;
-        case CryptoGuard::ProgramOptions::COMMAND_TYPE::CHECKSUM: 
-            std::cout << "CHECKSUM" << std::endl;
-            break;
-        default:
-            std::cout << "default" << std::endl;
-            break;
+    if (po.isHelpRequested()) {
+        po.printHelp();
+        return 0;
     }
-
-    std::cout << po.GetInputFile()  << std::endl;
-    std::cout << po.GetOutputFile() << std::endl;
-    std::cout << po.GetPassword()   << std::endl;
+    
     /*try {
         //
         // OpenSSL пример использования:
