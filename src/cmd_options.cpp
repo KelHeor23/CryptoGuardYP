@@ -15,24 +15,26 @@ ProgramOptions::ProgramOptions() : desc_("Allowed options") {
 
 ProgramOptions::~ProgramOptions() = default;
 
-void ProgramOptions::Parse(int argc, char *argv[]) {
+bool ProgramOptions::Parse(int argc, char *argv[]) {
     try {        
         po::store(po::parse_command_line(argc, argv, desc_), vm_);        
 
         if (vm_.count("help")) {
             std::cout << desc_ << "\n";
             helpRequested_ = true;
-            return;
+            return true;
         }
 
         po::notify(vm_);
     } 
-    catch (const po::error &ex) {
-        throw std::runtime_error(std::string("Error parsing command line: ") + ex.what());
+    catch (const po::error &e) {
+        std::print(std::cerr, "Error parsing command line: {}\n", e.what());
+        return false;
     } catch (...) {
-        throw std::runtime_error("Something unexpected happened");
+        std::print(std::cerr, "Error parsing command line: {}\n", "Something unexpected happened");
+        return false;
     }
-    return;
+    return true;
 }
 
 }  // namespace CryptoGuard

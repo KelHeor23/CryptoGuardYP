@@ -36,11 +36,12 @@ AesCipherParams CreateChiperParamsFromPassword(std::string_view password) {
 int main(int argc, char *argv[]) {
 
     CryptoGuard::ProgramOptions po;
-    po.Parse(argc, argv);
-
-    if (po.isHelpRequested()) {
+    
+    if (!po.Parse(argc, argv))
         return 0;
-    }
+
+    if (po.isHelpRequested())
+        return 0;   
 
     switch (po.GetCommand()) {
         case CryptoGuard::ProgramOptions::COMMAND_TYPE::ENCRYPT:

@@ -19,7 +19,7 @@ public:
         CHECKSUM,
     };
 
-    void Parse(int argc, char *argv[]);
+    bool Parse(int argc, char *argv[]);
 
     COMMAND_TYPE GetCommand() const { return command_; }
     std::string GetInputFile() const { return inputFile_; }
@@ -29,6 +29,7 @@ public:
     bool isHelpRequested() const { return helpRequested_; }
 private:
     COMMAND_TYPE command_;
+
     friend std::istream& operator>>(std::istream& in, COMMAND_TYPE& cmd) {
         std::string token;
         in >> token;
