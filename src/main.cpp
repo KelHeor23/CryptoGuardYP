@@ -56,6 +56,10 @@ int main(int argc, char *argv[]) {
             std::cout << "default" << std::endl;
             break;
     }
+
+    std::cout << po.GetInputFile()  << std::endl;
+    std::cout << po.GetOutputFile() << std::endl;
+    std::cout << po.GetPassword()   << std::endl;
     /*try {
         //
         // OpenSSL пример использования:
