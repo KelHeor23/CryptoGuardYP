@@ -29,13 +29,6 @@ public:
     bool isHelpRequested() const { return helpRequested_; }
 private:
     COMMAND_TYPE command_;
-    const std::unordered_map<std::string_view, COMMAND_TYPE> commandMapping_ = {
-        {"encrypt", ProgramOptions::COMMAND_TYPE::ENCRYPT},
-        {"decrypt", ProgramOptions::COMMAND_TYPE::DECRYPT},
-        {"checksum", ProgramOptions::COMMAND_TYPE::CHECKSUM},
-    };
-
-        // Для оператора operator>> сделаем дружественную функцию
     friend std::istream& operator>>(std::istream& in, COMMAND_TYPE& cmd) {
         std::string token;
         in >> token;
