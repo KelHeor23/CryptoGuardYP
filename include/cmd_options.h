@@ -6,6 +6,8 @@
 
 namespace CryptoGuard {
 
+namespace po = boost::program_options;
+
 class ProgramOptions {
 public:
     ProgramOptions();
@@ -33,12 +35,30 @@ private:
         {"checksum", ProgramOptions::COMMAND_TYPE::CHECKSUM},
     };
 
+        // Для оператора operator>> сделаем дружественную функцию
+    friend std::istream& operator>>(std::istream& in, COMMAND_TYPE& cmd) {
+        std::string token;
+        in >> token;
+        static const std::unordered_map<std::string, COMMAND_TYPE> mapping = {
+            {"encrypt", COMMAND_TYPE::ENCRYPT},
+            {"decrypt", COMMAND_TYPE::DECRYPT},
+            {"checksum", COMMAND_TYPE::CHECKSUM},
+        };
+        auto it = mapping.find(token);
+        if (it != mapping.end()) {
+            cmd = it->second;
+        } else {
+            throw po::validation_error(po::validation_error::invalid_option_value, "command");
+        }
+        return in;
+    }
+
     std::string inputFile_;
     std::string outputFile_;
     std::string password_;
 
-    boost::program_options::options_description desc_;
-    boost::program_options::variables_map vm_;
+    po::options_description desc_;
+    po::variables_map vm_;
     bool helpRequested_ = false;
 };
 
