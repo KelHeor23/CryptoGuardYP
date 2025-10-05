@@ -34,7 +34,14 @@ AesCipherParams CreateChiperParamsFromPassword(std::string_view password) {
 }
 
 int main(int argc, char *argv[]) {
-    try {
+
+    CryptoGuard::ProgramOptions po;
+    po.Parse(argc, argv);
+
+    if (po.isHelpRequested()) {
+        return 0;
+    }
+    /*try {
         //
         // OpenSSL пример использования:
         //
@@ -105,7 +112,7 @@ int main(int argc, char *argv[]) {
     } catch (const std::exception &e) {
         std::print(std::cerr, "Error: {}\n", e.what());
         return 1;
-    }
+    }*/
 
     return 0;
 }

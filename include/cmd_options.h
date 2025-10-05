@@ -24,6 +24,7 @@ public:
     std::string GetOutputFile() const { return outputFile_; }
     std::string GetPassword() const { return password_; }
 
+    bool isHelpRequested() const { return helpRequested_; }
 private:
     COMMAND_TYPE command_;
     const std::unordered_map<std::string_view, COMMAND_TYPE> commandMapping_ = {
@@ -37,6 +38,8 @@ private:
     std::string password_;
 
     boost::program_options::options_description desc_;
+    boost::program_options::variables_map vm_;
+    bool helpRequested_ = false;
 };
 
 }  // namespace CryptoGuard
