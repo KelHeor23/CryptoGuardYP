@@ -67,7 +67,7 @@ std::string ref() {
         return output;
 }
 
-TEST(CryptoGuardCtx, AllSuccessfully) {
+TEST(CryptoGuardCtx, EncryptAllSuccessfully) {
     std::stringstream inputStream;
     std::stringstream outputStream;
 
@@ -82,7 +82,7 @@ TEST(CryptoGuardCtx, AllSuccessfully) {
     EXPECT_EQ(res, refStr);
 }
 
-TEST(CryptoGuardCtx, ThrowsOnBadInputStream) {
+TEST(CryptoGuardCtx, EncryptThrowsOnBadInputStream) {
     std::stringstream inputStream;
     std::stringstream outputStream;
 
@@ -94,7 +94,7 @@ TEST(CryptoGuardCtx, ThrowsOnBadInputStream) {
     ASSERT_THROW(cryptoCtx.EncryptFile(inputStream, outputStream, password), std::runtime_error);
 }
 
-TEST(CryptoGuardCtx, ThrowsOnBadOutputStream) {
+TEST(CryptoGuardCtx, EncryptThrowsOnBadOutputStream) {
     std::stringstream inputStream;
     std::stringstream outputStream;
 
