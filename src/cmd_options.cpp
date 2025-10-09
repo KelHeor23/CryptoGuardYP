@@ -1,6 +1,7 @@
-#include <iostream>
-
 #include "cmd_options.h"
+
+#include <iostream>
+#include <format>
 
 namespace CryptoGuard {
 
@@ -15,25 +16,22 @@ ProgramOptions::ProgramOptions() : desc_("Allowed options") {
 
 ProgramOptions::~ProgramOptions() = default;
 
-bool ProgramOptions::Parse(int argc, char *argv[]) {
+void ProgramOptions::Parse(int argc, char *argv[]) {
     try {        
         po::store(po::parse_command_line(argc, argv, desc_), vm_);        
 
         if (vm_.count("help")) {            
             helpRequested_ = true;
-            return true;
+            return;
         }
 
         po::notify(vm_);
     } 
     catch (const po::error &e) {
-        std::print(std::cerr, "Error parsing command line: {}\n", e.what());
-        return false;
+        throw std::runtime_error{std::format("Error parsing command line: {}\n", e.what())};
     } catch (...) {
-        std::print(std::cerr, "Error parsing command line: {}\n", "Something unexpected happened");
-        return false;
+        throw std::runtime_error{std::format("Error parsing command line: {}\n", "Something unexpected happened")};
     }
-    return true;
 }
 
 void ProgramOptions::printHelp(){

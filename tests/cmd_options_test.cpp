@@ -13,7 +13,7 @@ TEST(ProgramOptions, ParsesAllRequiredOptionsSuccessfully) {
     };
 
     int argc = sizeof(argv) / sizeof(argv[0]);
-    EXPECT_TRUE(options.Parse(argc, const_cast<char**>(argv)));
+    options.Parse(argc, const_cast<char**>(argv));
     EXPECT_FALSE(options.isHelpRequested());
     EXPECT_EQ(options.GetCommand(), CryptoGuard::ProgramOptions::COMMAND_TYPE::ENCRYPT);
     EXPECT_EQ(options.GetInputFile(),   "input.txt");
@@ -32,7 +32,7 @@ TEST(ProgramOptions, ParsesAllShortRequiredOptionsSuccessfully) {
     };
 
     int argc = sizeof(argv) / sizeof(argv[0]);
-    EXPECT_TRUE(options.Parse(argc, const_cast<char**>(argv)));
+    options.Parse(argc, const_cast<char**>(argv));
     EXPECT_FALSE(options.isHelpRequested());
     EXPECT_EQ(options.GetCommand(), CryptoGuard::ProgramOptions::COMMAND_TYPE::ENCRYPT);
     EXPECT_EQ(options.GetInputFile(),   "input.txt");
@@ -48,7 +48,7 @@ TEST(ProgramOptions, ParsesCallForHelpSuccessful) {
     };
 
     int argc = sizeof(argv) / sizeof(argv[0]);
-    EXPECT_TRUE(options.Parse(argc, const_cast<char**>(argv)));
+    options.Parse(argc, const_cast<char**>(argv));
     EXPECT_TRUE(options.isHelpRequested());
 }
 
@@ -62,7 +62,7 @@ TEST(ProgramOptions, ParsesMissingRequiredOptionsFailed) {
     };
 
     int argc = sizeof(argv) / sizeof(argv[0]);
-    EXPECT_FALSE(options.Parse(argc, const_cast<char**>(argv)));
+    ASSERT_THROW(options.Parse(argc, const_cast<char**>(argv)), std::runtime_error);
 }
 
 TEST(ProgramOptions, ParsesInvalidCommandValueFailed) {
@@ -76,7 +76,7 @@ TEST(ProgramOptions, ParsesInvalidCommandValueFailed) {
     };
 
     int argc = sizeof(argv) / sizeof(argv[0]);
-    EXPECT_FALSE(options.Parse(argc, const_cast<char**>(argv)));
+    ASSERT_THROW(options.Parse(argc, const_cast<char**>(argv)), std::runtime_error);
 }
 
 TEST(ProgramOptions, ParsesUnknownOptionsFailed) {
@@ -91,5 +91,5 @@ TEST(ProgramOptions, ParsesUnknownOptionsFailed) {
     };
 
     int argc = sizeof(argv) / sizeof(argv[0]);
-    EXPECT_FALSE(options.Parse(argc, const_cast<char**>(argv)));
+    ASSERT_THROW(options.Parse(argc, const_cast<char**>(argv)), std::runtime_error);
 }

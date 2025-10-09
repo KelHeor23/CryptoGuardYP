@@ -12,8 +12,7 @@ int main(int argc, char *argv[]) {
 
     CryptoGuard::ProgramOptions po;
 
-    if (!po.Parse(argc, argv))
-        return 0;
+    po.Parse(argc, argv);
 
     if (po.isHelpRequested()) {
         po.printHelp();
