@@ -27,13 +27,12 @@ AesCipherParams CreateChiperParamsFromPassword(std::string_view password) {
     return params;
 }
 
-std::string ref() {
-        std::string input = "01234567890123456789";
+std::string ref(std::string_view input, std::string_view pwd) {
         std::string output;
 
         OpenSSL_add_all_algorithms();
 
-        auto params = CreateChiperParamsFromPassword("12341234");
+        auto params = CreateChiperParamsFromPassword(pwd);
         params.encrypt = 1;
         auto *ctx = EVP_CIPHER_CTX_new();
 
@@ -71,12 +70,15 @@ TEST(CryptoGuardCtx, EncryptAllSuccessfully) {
     std::stringstream inputStream;
     std::stringstream outputStream;
 
-    inputStream.str("01234567890123456789");
-    std::string_view password = "12341234";
-    std::string refStr = ref();
+    std::string input = "01234567890123456789";
+    std::string password = "12341234";
+
+    inputStream.str(input);
+
+    std::string refStr = ref(input, password);
     CryptoGuard::CryptoGuardCtx cryptoCtx(password);
 
-    cryptoCtx.EncryptFile(inputStream, outputStream, password);
+    cryptoCtx.EncryptFile(inputStream, outputStream);
     std::string res = outputStream.str();
 
     EXPECT_EQ(res, refStr);
@@ -86,22 +88,79 @@ TEST(CryptoGuardCtx, EncryptThrowsOnBadInputStream) {
     std::stringstream inputStream;
     std::stringstream outputStream;
 
-    inputStream.str("01234567890123456789");
-    std::string_view password = "12341234";
+    std::string input = "01234567890123456789";
+    std::string password = "12341234";
+
+    inputStream.str(input);    
     CryptoGuard::CryptoGuardCtx cryptoCtx(password);
 
     inputStream.setstate(std::ios::badbit);
-    ASSERT_THROW(cryptoCtx.EncryptFile(inputStream, outputStream, password), std::runtime_error);
+    ASSERT_THROW(cryptoCtx.EncryptFile(inputStream, outputStream), std::runtime_error);
 }
 
 TEST(CryptoGuardCtx, EncryptThrowsOnBadOutputStream) {
     std::stringstream inputStream;
     std::stringstream outputStream;
 
-    inputStream.str("01234567890123456789");
-    std::string_view password = "12341234";
+    std::string input = "01234567890123456789";
+    std::string password = "12341234";
+
+    inputStream.str(input);
     CryptoGuard::CryptoGuardCtx cryptoCtx(password);
 
     outputStream.setstate(std::ios::badbit);
-    ASSERT_THROW(cryptoCtx.EncryptFile(inputStream, outputStream, password), std::runtime_error);
+    ASSERT_THROW(cryptoCtx.EncryptFile(inputStream, outputStream), std::runtime_error);
+}
+
+TEST(CryptoGuardCtx, DecryptAllSuccessfully) {
+    std::stringstream inputStream;
+    std::stringstream outputStream;
+    std::stringstream decryptStream;
+
+    std::string input = "01234567890123456789";
+    std::string password = "12341234";
+
+    inputStream.str(input);
+    CryptoGuard::CryptoGuardCtx cryptoCtx(password);
+
+    cryptoCtx.EncryptFile(inputStream, outputStream);
+    cryptoCtx.DecryptFile(outputStream, decryptStream);
+
+    std::string res = decryptStream.str();
+
+    EXPECT_EQ(res, input);
+}
+
+TEST(CryptoGuardCtx, DecryptThrowsOnBadEncryptStream) {
+    std::stringstream inputStream;
+    std::stringstream EncryptStream;
+    std::stringstream DecryptStream;
+
+    std::string input = "01234567890123456789";
+    std::string password = "12341234";
+
+    inputStream.str(input);
+    CryptoGuard::CryptoGuardCtx cryptoCtx(password);
+
+    cryptoCtx.EncryptFile(inputStream, EncryptStream);
+
+    EncryptStream.setstate(std::ios::badbit);
+    ASSERT_THROW(cryptoCtx.DecryptFile(EncryptStream, DecryptStream), std::runtime_error);
+}
+
+TEST(CryptoGuardCtx, DecryptThrowsOnBadDecryptStream) {
+    std::stringstream inputStream;
+    std::stringstream EncryptStream;
+    std::stringstream DecryptStream;
+
+    std::string input = "01234567890123456789";
+    std::string password = "12341234";
+
+    inputStream.str(input);
+    CryptoGuard::CryptoGuardCtx cryptoCtx(password);
+
+    cryptoCtx.EncryptFile(inputStream, EncryptStream);
+
+    DecryptStream.setstate(std::ios::badbit);
+    ASSERT_THROW(cryptoCtx.DecryptFile(EncryptStream, DecryptStream), std::runtime_error);
 }
