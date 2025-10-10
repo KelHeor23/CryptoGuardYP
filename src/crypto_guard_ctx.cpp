@@ -1,6 +1,7 @@
 #include "crypto_guard_ctx.h"
 
 #include <openssl/evp.h>
+#include <openssl/err.h>
 #include <array>
 #include <iostream>
 #include <vector>
@@ -63,7 +64,7 @@ public:
         if (!EVP_CipherInit_ex(ctx.get(), params.cipher, nullptr,
                           params.key.data(), params.iv.data(),
                           params.encrypt)) {
-            throw std::runtime_error("EVP_CipherInit_ex failed");
+            throwOpenSSLError("EVP_CipherInit_ex failed");
         }
 
         constexpr std::size_t CHUNK = 16;
@@ -79,7 +80,7 @@ public:
 
             if (!EVP_CipherUpdate(ctx.get(), outBuf.data(), 
                     &outLen, inBuf.data(), static_cast<int>(got))) {
-                throw std::runtime_error("EVP_CipherUpdate failed");
+                throwOpenSSLError("EVP_CipherUpdate failed");
             }
 
             if (outLen > 0) {
@@ -96,14 +97,13 @@ public:
         }
 
         if (!EVP_CipherFinal_ex(ctx.get(), outBuf.data(), &outLen)) {
-            throw std::runtime_error("EVP_CipherFinal_ex failed");
+            throwOpenSSLError("EVP_CipherFinal_ex failed");
         }
 
         if (outLen > 0) {
             outStream.write(reinterpret_cast<const char*>(outBuf.data()), outLen);
-            if (!outStream.good()) {
-                throw std::runtime_error("write final block failed");
-            }
+            if (!outStream.good()) 
+                throwOpenSSLError("write final block failed");
         }
 
         outStream.flush();
@@ -120,7 +120,7 @@ public:
         if (!EVP_CipherInit_ex(ctx.get(), params.cipher, nullptr,
                           params.key.data(), params.iv.data(),
                           params.encrypt)) {
-            throw std::runtime_error("EVP_CipherInit_ex failed");
+            throwOpenSSLError("EVP_CipherInit_ex failed");
         }
 
         constexpr std::size_t CHUNK = 16;
@@ -136,7 +136,7 @@ public:
 
             if (!EVP_CipherUpdate(ctx.get(), outBuf.data(), &outLen,
                     inBuf.data(), static_cast<int>(got))) 
-                throw std::runtime_error("EVP_CipherUpdate failed");            
+                throwOpenSSLError("EVP_CipherUpdate failed");            
 
             if (outLen > 0) {
                 outStream.write(reinterpret_cast<const char*>(outBuf.data()), outLen);
@@ -151,7 +151,7 @@ public:
         }
 
         if (!EVP_CipherFinal_ex(ctx.get(), outBuf.data(), &outLen)) 
-            throw std::runtime_error("EVP_CipherFinal_ex failed (bad decrypt?)");    
+            throwOpenSSLError("EVP_CipherFinal_ex failed (bad decrypt?)");    
 
         if (outLen > 0) {
             outStream.write(reinterpret_cast<const char*>(outBuf.data()), outLen);
@@ -204,6 +204,30 @@ private:
             oss << std::setw(2) << static_cast<unsigned int>(data[i]);
         }
         return oss.str();
+    }
+
+    // Собираю все ошщибки OpenSSL в одно сообщение
+    void throwOpenSSLError(const char* prefix = nullptr) {
+        std::ostringstream oss;
+        if (prefix && prefix[0] != '\0') 
+            oss << prefix << ": ";
+
+        unsigned long errCode = 0;
+        bool first = true;
+        while ((errCode = ERR_get_error()) != 0) {
+            char errBuf[256];
+            ERR_error_string_n(errCode, errBuf, sizeof(errBuf));
+            if (!first) oss << " | ";
+            oss << errBuf;
+            first = false;
+        }
+
+        if (first) {
+            // Ошибок в очереди нет
+            oss << "Unknown OpenSSL error";
+        }
+
+        throw std::runtime_error(oss.str());
     }
 private:
     UniqueCipherCtx ctx;
