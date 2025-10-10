@@ -33,9 +33,8 @@ using UniqueCipherMdCtx = std::unique_ptr<EVP_MD_CTX, decltype(deleterMD_CTX)>;
 
 class CryptoGuardCtx::Impl {
 public:
-    Impl(std::string_view pwd) : ctx(EVP_CIPHER_CTX_new(), deleter) {
-        if (!ctx) throw std::bad_alloc();
-        params = CreateChiperParamsFromPassword(pwd);
+    Impl() : ctx(EVP_CIPHER_CTX_new(), deleter) {
+        if (!ctx) throw std::bad_alloc();        
     }
 
     ~Impl() {
@@ -56,12 +55,13 @@ public:
         return params;
     }
 
-    void EncryptFile(std::iostream &inStream, std::iostream &outStream) {
+    void EncryptFile(std::iostream &inStream, std::iostream &outStream, std::string_view password) {
         if (!inStream.good() && !inStream.eof())
             throw std::runtime_error("Input stream not ready");
         if (!outStream.good())
             throw std::runtime_error("Output stream not ready");
 
+        params = CreateChiperParamsFromPassword(password);
         params.encrypt = 1;
 
         if (!EVP_CipherInit_ex(ctx.get(), params.cipher, nullptr,
@@ -112,12 +112,13 @@ public:
         OPENSSL_cleanse(outBuf.data(), outBuf.size());
     }
 
-    void DecryptFile(std::iostream &inStream, std::iostream &outStream) {
+    void DecryptFile(std::iostream &inStream, std::iostream &outStream, std::string_view password) {
         if (!inStream.good() && !inStream.eof())
             throw std::runtime_error("Input stream not ready");
         if (!outStream.good())
             throw std::runtime_error("Output stream not ready");
 
+        params = CreateChiperParamsFromPassword(password);
         params.encrypt = 0;
 
         if (!EVP_CipherInit_ex(ctx.get(), params.cipher, nullptr,
@@ -170,7 +171,7 @@ public:
     std::string CalculateChecksum(std::iostream &inStream) {
         if (!inStream.good() && !inStream.eof())
             throw std::runtime_error("Input stream not ready");
-        
+
         UniqueCipherMdCtx ctxMd(EVP_MD_CTX_new(), deleterMD_CTX);
         if (!ctxMd) throw std::bad_alloc();
         
@@ -241,17 +242,17 @@ private:
     AesCipherParams params;
 };
 
-CryptoGuardCtx::CryptoGuardCtx(std::string_view pwd) 
-    : pImpl_(std::make_unique<Impl>(pwd)) {}
+CryptoGuardCtx::CryptoGuardCtx() 
+    : pImpl_(std::make_unique<Impl>()) {}
 
 CryptoGuardCtx::~CryptoGuardCtx() = default;
 
-void CryptoGuardCtx::EncryptFile(std::iostream &inStream, std::iostream &outStream) {
-    pImpl_->EncryptFile(inStream, outStream);
+void CryptoGuardCtx::EncryptFile(std::iostream &inStream, std::iostream &outStream, std::string_view password) {
+    pImpl_->EncryptFile(inStream, outStream, password);
 }
 
-void CryptoGuardCtx::DecryptFile(std::iostream &inStream, std::iostream &outStream) {
-    pImpl_->DecryptFile(inStream, outStream);
+void CryptoGuardCtx::DecryptFile(std::iostream &inStream, std::iostream &outStream, std::string_view password) {
+    pImpl_->DecryptFile(inStream, outStream, password);
 }
 
 std::string CryptoGuardCtx::CalculateChecksum(std::iostream &inStream) {

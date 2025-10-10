@@ -76,9 +76,9 @@ TEST(CryptoGuardCtx, EncryptAllSuccessfully) {
     inputStream.str(input);
 
     std::string refStr = ref(input, password);
-    CryptoGuard::CryptoGuardCtx cryptoCtx(password);
+    CryptoGuard::CryptoGuardCtx cryptoCtx;
 
-    cryptoCtx.EncryptFile(inputStream, outputStream);
+    cryptoCtx.EncryptFile(inputStream, outputStream, password);
     std::string res = outputStream.str();
 
     EXPECT_EQ(res, refStr);
@@ -92,10 +92,10 @@ TEST(CryptoGuardCtx, EncryptThrowsOnBadInputStream) {
     std::string password = "12341234";
 
     inputStream.str(input);    
-    CryptoGuard::CryptoGuardCtx cryptoCtx(password);
+    CryptoGuard::CryptoGuardCtx cryptoCtx;
 
     inputStream.setstate(std::ios::badbit);
-    ASSERT_THROW(cryptoCtx.EncryptFile(inputStream, outputStream), std::runtime_error);
+    ASSERT_THROW(cryptoCtx.EncryptFile(inputStream, outputStream, password), std::runtime_error);
 }
 
 TEST(CryptoGuardCtx, EncryptThrowsOnBadOutputStream) {
@@ -106,10 +106,10 @@ TEST(CryptoGuardCtx, EncryptThrowsOnBadOutputStream) {
     std::string password = "12341234";
 
     inputStream.str(input);
-    CryptoGuard::CryptoGuardCtx cryptoCtx(password);
+    CryptoGuard::CryptoGuardCtx cryptoCtx;
 
     outputStream.setstate(std::ios::badbit);
-    ASSERT_THROW(cryptoCtx.EncryptFile(inputStream, outputStream), std::runtime_error);
+    ASSERT_THROW(cryptoCtx.EncryptFile(inputStream, outputStream, password), std::runtime_error);
 }
 
 TEST(CryptoGuardCtx, DecryptAllSuccessfully) {
@@ -121,10 +121,10 @@ TEST(CryptoGuardCtx, DecryptAllSuccessfully) {
     std::string password = "12341234";
 
     inputStream.str(input);
-    CryptoGuard::CryptoGuardCtx cryptoCtx(password);
+    CryptoGuard::CryptoGuardCtx cryptoCtx;
 
-    cryptoCtx.EncryptFile(inputStream, outputStream);
-    cryptoCtx.DecryptFile(outputStream, decryptStream);
+    cryptoCtx.EncryptFile(inputStream, outputStream, password);
+    cryptoCtx.DecryptFile(outputStream, decryptStream, password);
 
     std::string res = decryptStream.str();
 
@@ -140,12 +140,12 @@ TEST(CryptoGuardCtx, DecryptThrowsOnBadEncryptStream) {
     std::string password = "12341234";
 
     inputStream.str(input);
-    CryptoGuard::CryptoGuardCtx cryptoCtx(password);
+    CryptoGuard::CryptoGuardCtx cryptoCtx;
 
-    cryptoCtx.EncryptFile(inputStream, EncryptStream);
+    cryptoCtx.EncryptFile(inputStream, EncryptStream, password);
 
     EncryptStream.setstate(std::ios::badbit);
-    ASSERT_THROW(cryptoCtx.DecryptFile(EncryptStream, DecryptStream), std::runtime_error);
+    ASSERT_THROW(cryptoCtx.DecryptFile(EncryptStream, DecryptStream, password), std::runtime_error);
 }
 
 TEST(CryptoGuardCtx, DecryptThrowsOnBadDecryptStream) {
@@ -157,12 +157,12 @@ TEST(CryptoGuardCtx, DecryptThrowsOnBadDecryptStream) {
     std::string password = "12341234";
 
     inputStream.str(input);
-    CryptoGuard::CryptoGuardCtx cryptoCtx(password);
+    CryptoGuard::CryptoGuardCtx cryptoCtx;
 
-    cryptoCtx.EncryptFile(inputStream, EncryptStream);
+    cryptoCtx.EncryptFile(inputStream, EncryptStream, password);
 
     DecryptStream.setstate(std::ios::badbit);
-    ASSERT_THROW(cryptoCtx.DecryptFile(EncryptStream, DecryptStream), std::runtime_error);
+    ASSERT_THROW(cryptoCtx.DecryptFile(EncryptStream, DecryptStream, password), std::runtime_error);
 }
 
 static std::stringstream MakeBinStream(const std::string& bytes) {
@@ -177,7 +177,7 @@ TEST(CryptoGuardCtx, CalculateChecksumAllSuccessfully) {
     // SHA256("abc") =
     // ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
 
-    CryptoGuard::CryptoGuardCtx cryptoCtx("");
+    CryptoGuard::CryptoGuardCtx cryptoCtx;
 
     const std::string kExpected =
         "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
@@ -191,7 +191,7 @@ TEST(CryptoGuardCtx, CalculateChecksumThrowsOnBadInputStream) {
     // SHA256("abc") =
     // ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
 
-    CryptoGuard::CryptoGuardCtx cryptoCtx("");
+    CryptoGuard::CryptoGuardCtx cryptoCtx;
 
     const std::string kExpected =
         "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";

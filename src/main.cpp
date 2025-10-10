@@ -20,14 +20,17 @@ int main(int argc, char *argv[]) {
         }
 
         CryptoGuard::CryptoGuardCtx cryptoCtx(options.GetPassword());
+        CryptoGuard::CryptoGuardCtx cryptoCtx;
 
         using COMMAND_TYPE = CryptoGuard::ProgramOptions::COMMAND_TYPE;
         switch (options.GetCommand()) {
         case COMMAND_TYPE::ENCRYPT:
+            cryptoCtx.EncryptFile(inputFile, outputFile, options.GetPassword());
             std::print("File encoded successfully\n");
             break;
 
         case COMMAND_TYPE::DECRYPT:
+            cryptoCtx.DecryptFile(inputFile, outputFile, options.GetPassword());
             std::print("File decoded successfully\n");
             break;
 

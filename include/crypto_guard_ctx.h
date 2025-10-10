@@ -7,8 +7,7 @@ namespace CryptoGuard {
 
 class CryptoGuardCtx {
 public:
-    CryptoGuardCtx(std::string_view pwd);
-    CryptoGuardCtx() = delete;
+    CryptoGuardCtx();
     ~CryptoGuardCtx();
 
     CryptoGuardCtx(const CryptoGuardCtx &) = delete;
@@ -18,8 +17,8 @@ public:
     CryptoGuardCtx &operator=(CryptoGuardCtx &&) noexcept = default;
 
     // API
-    void EncryptFile(std::iostream &inStream, std::iostream &outStream);
-    void DecryptFile(std::iostream &inStream, std::iostream &outStream);
+    void EncryptFile(std::iostream &inStream, std::iostream &outStream, std::string_view password);
+    void DecryptFile(std::iostream &inStream, std::iostream &outStream, std::string_view password);
     std::string CalculateChecksum(std::iostream &inStream);
 
 private:
