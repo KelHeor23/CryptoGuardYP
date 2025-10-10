@@ -4,6 +4,8 @@
 #include <array>
 #include <iostream>
 #include <vector>
+#include <sstream>
+#include <iomanip>
 
 namespace CryptoGuard {
 
@@ -21,7 +23,12 @@ auto deleter = [](EVP_CIPHER_CTX* ctx) {
     if (ctx) EVP_CIPHER_CTX_free(ctx);
 };
 
+auto deleterMD_CTX = [](EVP_MD_CTX* ctx) {
+    if (ctx) EVP_MD_CTX_free(ctx);
+};
+
 using UniqueCipherCtx = std::unique_ptr<EVP_CIPHER_CTX, decltype(deleter)>;
+using UniqueCipherMdCtx = std::unique_ptr<EVP_MD_CTX, decltype(deleterMD_CTX)>;
 
 class CryptoGuardCtx::Impl {
 public:
@@ -143,7 +150,7 @@ public:
             }
         }
 
-        if (EVP_CipherFinal_ex(ctx.get(), outBuf.data(), &outLen) != 1) 
+        if (!EVP_CipherFinal_ex(ctx.get(), outBuf.data(), &outLen)) 
             throw std::runtime_error("EVP_CipherFinal_ex failed (bad decrypt?)");    
 
         if (outLen > 0) {
@@ -156,9 +163,48 @@ public:
     }
 
     std::string CalculateChecksum(std::iostream &inStream) {
-        return "NOT_IMPLEMENTED";
+        if (!inStream.good() && !inStream.eof())
+            throw std::runtime_error("Input stream not ready");
+        UniqueCipherMdCtx ctxMd(EVP_MD_CTX_new(), deleterMD_CTX);
+
+         // Инициализируем хеш-контекст с SHA-256
+        if (!EVP_DigestInit_ex(ctxMd.get(), EVP_sha256(), nullptr)) 
+            throw std::runtime_error("Failed to initialize digest context\n");
+        
+        constexpr std::size_t CHUNK = 16;
+        std::vector<unsigned char> buf(CHUNK);
+
+        while (true) {
+            inStream.read(reinterpret_cast<char*>(buf.data()),
+                    static_cast<std::streamsize>(buf.size()));
+            std::streamsize got = inStream.gcount();
+            if (got > 0) {
+                if (!EVP_DigestUpdate(ctxMd.get(), buf.data(), static_cast<size_t>(got)))
+                    throw std::runtime_error("Digest update failed");
+            }
+
+            if (inStream.eof()) break;
+            if (!inStream.good()) 
+                throw std::runtime_error("Read error while hashing stream");            
+        }
+
+        unsigned char md_value[EVP_MAX_MD_SIZE];
+        unsigned int md_len = 0;
+        if (!EVP_DigestFinal_ex(ctxMd.get(), md_value, &md_len))
+            throw std::runtime_error("Digest finalization failed");
+
+        return BytesToHex(md_value, md_len);
     }
 
+private:
+    static std::string BytesToHex(const unsigned char* data, unsigned int len) {
+        std::ostringstream oss;
+        oss << std::hex << std::setfill('0');
+        for (unsigned int i = 0; i < len; ++i) {
+            oss << std::setw(2) << static_cast<unsigned int>(data[i]);
+        }
+        return oss.str();
+    }
 private:
     UniqueCipherCtx ctx;
     AesCipherParams params;
