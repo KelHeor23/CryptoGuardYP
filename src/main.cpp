@@ -1,12 +1,9 @@
 #include "cmd_options.h"
 #include "crypto_guard_ctx.h"
-#include <algorithm>
-#include <array>
+
 #include <iostream>
-#include <openssl/evp.h>
 #include <print>
-#include <stdexcept>
-#include <string>
+#include <fstream>
 
 int main(int argc, char *argv[]) {
     try {     
@@ -19,25 +16,42 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        CryptoGuard::CryptoGuardCtx cryptoCtx(options.GetPassword());
         CryptoGuard::CryptoGuardCtx cryptoCtx;
 
         using COMMAND_TYPE = CryptoGuard::ProgramOptions::COMMAND_TYPE;
         switch (options.GetCommand()) {
-        case COMMAND_TYPE::ENCRYPT:
+        case COMMAND_TYPE::ENCRYPT: {
+            std::fstream inputFile(options.GetInputFile(), std::ios::in);
+            if (!inputFile.is_open())
+                throw std::runtime_error("Error opening file inputFile");
+            std::fstream outputFile(options.GetOutputFile(), std::ios::out);
+            if (!outputFile.is_open())
+                throw std::runtime_error("Error opening file outputFile");
+
             cryptoCtx.EncryptFile(inputFile, outputFile, options.GetPassword());
             std::print("File encoded successfully\n");
             break;
+        }
+        case COMMAND_TYPE::DECRYPT: {
+            std::fstream inputFile(options.GetInputFile(), std::ios::in);
+            if (!inputFile.is_open())
+                throw std::runtime_error("Error opening file inputFile");
+            std::fstream outputFile(options.GetOutputFile(), std::ios::out);
+            if (!outputFile.is_open())
+                throw std::runtime_error("Error opening file outputFile");
 
-        case COMMAND_TYPE::DECRYPT:
             cryptoCtx.DecryptFile(inputFile, outputFile, options.GetPassword());
             std::print("File decoded successfully\n");
             break;
+        }
+        case COMMAND_TYPE::CHECKSUM: {
+            std::fstream inputFile(options.GetInputFile(), std::ios::in);
+            if (!inputFile.is_open())
+                throw std::runtime_error("Error opening file inputFile");
 
-        case COMMAND_TYPE::CHECKSUM:
-            std::print("Checksum: {}\n", "CHECKSUM_NOT_IMPLEMENTED");
+            std::print("Checksum: {}\n", cryptoCtx.CalculateChecksum(inputFile));
             break;
-
+        }
         default:
             throw std::runtime_error{"Unsupported command"};
         }
