@@ -48,6 +48,8 @@ void ProgramOptions::Parse(int argc, char *argv[]) {
     } 
     catch (const po::error &e) {
         throw std::runtime_error{std::format("Error parsing command line: {}\n", e.what())};
+    } catch (const std::runtime_error &e) {
+        throw e;
     } catch (...) {
         throw std::runtime_error{std::format("Error parsing command line: {}\n", "Something unexpected happened")};
     }
