@@ -25,7 +25,16 @@ using UniqueCipherCtx = std::unique_ptr<EVP_CIPHER_CTX, decltype(deleter)>;
 
 class CryptoGuardCtx::Impl {
 public:
-    Impl() {}
+    Impl(std::string_view pwd) : ctx(EVP_CIPHER_CTX_new(), deleter) {
+        params = CreateChiperParamsFromPassword(pwd);
+        params.encrypt = 1;
+
+        if (!EVP_CipherInit_ex(ctx.get(), params.cipher, nullptr,
+                          params.key.data(), params.iv.data(),
+                          params.encrypt)) {
+            throw std::runtime_error("EVP_CipherInit_ex failed");
+        }
+    }
 
     ~Impl() {
     }
@@ -48,17 +57,6 @@ public:
             throw std::runtime_error("Input stream not ready");
         if (!outStream.good())
             throw std::runtime_error("Output stream not ready");
-
-        auto params = CreateChiperParamsFromPassword(password);
-        params.encrypt = 1;
-
-        UniqueCipherCtx ctx(EVP_CIPHER_CTX_new(), deleter);
-
-        if (!EVP_CipherInit_ex(ctx.get(), params.cipher, nullptr,
-                          params.key.data(), params.iv.data(),
-                          params.encrypt)) {
-            throw std::runtime_error("EVP_CipherInit_ex failed");
-        }
 
         constexpr std::size_t CHUNK = 16;
         std::vector<unsigned char> outBuf(CHUNK + EVP_MAX_BLOCK_LENGTH);
@@ -111,11 +109,12 @@ public:
     }
 
 private:
-
+    UniqueCipherCtx ctx;
+    AesCipherParams params;
 };
 
-CryptoGuardCtx::CryptoGuardCtx() 
-    : pImpl_(std::make_unique<Impl>()) {}
+CryptoGuardCtx::CryptoGuardCtx(std::string_view pwd) 
+    : pImpl_(std::make_unique<Impl>(pwd)) {}
 
 CryptoGuardCtx::~CryptoGuardCtx() = default;
 

@@ -7,7 +7,8 @@ namespace CryptoGuard {
 
 class CryptoGuardCtx {
 public:
-    CryptoGuardCtx();
+    CryptoGuardCtx(std::string_view pwd);
+    CryptoGuardCtx() = delete;
     ~CryptoGuardCtx();
 
     CryptoGuardCtx(const CryptoGuardCtx &) = delete;

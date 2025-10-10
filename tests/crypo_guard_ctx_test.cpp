@@ -74,7 +74,7 @@ TEST(CryptoGuardCtx, EncryptAllSuccessfully) {
     inputStream.str("01234567890123456789");
     std::string_view password = "12341234";
     std::string refStr = ref();
-    CryptoGuard::CryptoGuardCtx cryptoCtx;
+    CryptoGuard::CryptoGuardCtx cryptoCtx(password);
 
     cryptoCtx.EncryptFile(inputStream, outputStream, password);
     std::string res = outputStream.str();
@@ -88,7 +88,7 @@ TEST(CryptoGuardCtx, EncryptThrowsOnBadInputStream) {
 
     inputStream.str("01234567890123456789");
     std::string_view password = "12341234";
-    CryptoGuard::CryptoGuardCtx cryptoCtx;
+    CryptoGuard::CryptoGuardCtx cryptoCtx(password);
 
     inputStream.setstate(std::ios::badbit);
     ASSERT_THROW(cryptoCtx.EncryptFile(inputStream, outputStream, password), std::runtime_error);
@@ -100,7 +100,7 @@ TEST(CryptoGuardCtx, EncryptThrowsOnBadOutputStream) {
 
     inputStream.str("01234567890123456789");
     std::string_view password = "12341234";
-    CryptoGuard::CryptoGuardCtx cryptoCtx;
+    CryptoGuard::CryptoGuardCtx cryptoCtx(password);
 
     outputStream.setstate(std::ios::badbit);
     ASSERT_THROW(cryptoCtx.EncryptFile(inputStream, outputStream, password), std::runtime_error);
