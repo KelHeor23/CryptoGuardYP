@@ -34,10 +34,13 @@ using UniqueCipherMdCtx = std::unique_ptr<EVP_MD_CTX, decltype(deleterMD_CTX)>;
 class CryptoGuardCtx::Impl {
 public:
     Impl(std::string_view pwd) : ctx(EVP_CIPHER_CTX_new(), deleter) {
+        if (!ctx) throw std::bad_alloc();
         params = CreateChiperParamsFromPassword(pwd);
     }
 
     ~Impl() {
+        OPENSSL_cleanse(params.key.data(), params.key.size());
+        OPENSSL_cleanse(params.iv.data(),  params.iv.size());
     }
 
     AesCipherParams CreateChiperParamsFromPassword(std::string_view password) {
@@ -85,15 +88,13 @@ public:
 
             if (outLen > 0) {
                 outStream.write(reinterpret_cast<const char*>(outBuf.data()), outLen);
-                if (!outStream.good()) {
+                if (!outStream.good())
                     throw std::runtime_error("write to outStream failed");
-                }
             }
 
             if (inStream.eof()) break;
-            if (!inStream.good() && !inStream.eof()) {
+            if (!inStream.good() && !inStream.eof())
                 throw std::runtime_error("read from inStream failed");
-            }
         }
 
         if (!EVP_CipherFinal_ex(ctx.get(), outBuf.data(), &outLen)) {
@@ -103,10 +104,12 @@ public:
         if (outLen > 0) {
             outStream.write(reinterpret_cast<const char*>(outBuf.data()), outLen);
             if (!outStream.good()) 
-                throwOpenSSLError("write final block failed");
+                throw std::runtime_error("write final block failed");
         }
 
         outStream.flush();
+        OPENSSL_cleanse(inBuf.data(),  inBuf.size());
+        OPENSSL_cleanse(outBuf.data(), outBuf.size());
     }
 
     void DecryptFile(std::iostream &inStream, std::iostream &outStream) {
@@ -160,14 +163,18 @@ public:
         }
 
         outStream.flush();
+        OPENSSL_cleanse(inBuf.data(),  inBuf.size());
+        OPENSSL_cleanse(outBuf.data(), outBuf.size());
     }
 
     std::string CalculateChecksum(std::iostream &inStream) {
         if (!inStream.good() && !inStream.eof())
             throw std::runtime_error("Input stream not ready");
+        
         UniqueCipherMdCtx ctxMd(EVP_MD_CTX_new(), deleterMD_CTX);
-
-         // Инициализируем хеш-контекст с SHA-256
+        if (!ctxMd) throw std::bad_alloc();
+        
+        // Инициализируем хеш-контекст с SHA-256
         if (!EVP_DigestInit_ex(ctxMd.get(), EVP_sha256(), nullptr)) 
             throw std::runtime_error("Failed to initialize digest context\n");
         
