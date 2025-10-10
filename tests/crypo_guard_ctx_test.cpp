@@ -164,3 +164,39 @@ TEST(CryptoGuardCtx, DecryptThrowsOnBadDecryptStream) {
     DecryptStream.setstate(std::ios::badbit);
     ASSERT_THROW(cryptoCtx.DecryptFile(EncryptStream, DecryptStream), std::runtime_error);
 }
+
+static std::stringstream MakeBinStream(const std::string& bytes) {
+    std::stringstream ss(std::ios::in | std::ios::out | std::ios::binary);
+    ss.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+    ss.clear();
+    ss.seekg(0, std::ios::beg);
+    return ss;
+}
+
+TEST(CryptoGuardCtx, CalculateChecksumAllSuccessfully) {
+    // SHA256("abc") =
+    // ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+
+    CryptoGuard::CryptoGuardCtx cryptoCtx("");
+
+    const std::string kExpected =
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+
+    auto ss = MakeBinStream("abc");
+    const auto got = cryptoCtx.CalculateChecksum(ss);
+    EXPECT_EQ(got, kExpected);
+}
+
+TEST(CryptoGuardCtx, CalculateChecksumThrowsOnBadInputStream) {
+    // SHA256("abc") =
+    // ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+
+    CryptoGuard::CryptoGuardCtx cryptoCtx("");
+
+    const std::string kExpected =
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+
+    auto ss = MakeBinStream("abc");
+    ss.setstate(std::ios::badbit);
+    ASSERT_THROW(cryptoCtx.CalculateChecksum(ss), std::runtime_error);
+}
