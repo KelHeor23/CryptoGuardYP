@@ -9,20 +9,17 @@
 #include <string>
 
 int main(int argc, char *argv[]) {
-
-    CryptoGuard::ProgramOptions po;
-
-    po.Parse(argc, argv);
-
-    if (po.isHelpRequested()) {
-        po.printHelp();
-        return 0;
-    }
-    
-    /*try {     
+    try {     
         CryptoGuard::ProgramOptions options;
 
-        CryptoGuard::CryptoGuardCtx cryptoCtx;
+        options.Parse(argc, argv);
+
+        if (options.isHelpRequested()) {
+            options.printHelp();
+            return 0;
+        }
+
+        CryptoGuard::CryptoGuardCtx cryptoCtx(options.GetPassword());
 
         using COMMAND_TYPE = CryptoGuard::ProgramOptions::COMMAND_TYPE;
         switch (options.GetCommand()) {
@@ -45,7 +42,7 @@ int main(int argc, char *argv[]) {
     } catch (const std::exception &e) {
         std::print(std::cerr, "Error: {}\n", e.what());
         return 1;
-    }*/
+    }
 
     return 0;
 }
