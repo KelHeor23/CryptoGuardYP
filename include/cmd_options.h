@@ -6,6 +6,8 @@
 
 namespace CryptoGuard {
 
+namespace po = boost::program_options;
+
 class ProgramOptions {
 public:
     ProgramOptions();
@@ -24,19 +26,36 @@ public:
     std::string GetOutputFile() const { return outputFile_; }
     std::string GetPassword() const { return password_; }
 
+    bool isHelpRequested() const { return helpRequested_; }
+
+    void printHelp();
 private:
     COMMAND_TYPE command_;
-    const std::unordered_map<std::string_view, COMMAND_TYPE> commandMapping_ = {
-        {"encrypt", ProgramOptions::COMMAND_TYPE::ENCRYPT},
-        {"decrypt", ProgramOptions::COMMAND_TYPE::DECRYPT},
-        {"checksum", ProgramOptions::COMMAND_TYPE::CHECKSUM},
-    };
+
+    friend std::istream& operator>>(std::istream& in, COMMAND_TYPE& cmd) {
+        std::string token;
+        in >> token;
+        static const std::unordered_map<std::string, COMMAND_TYPE> mapping = {
+            {"encrypt", COMMAND_TYPE::ENCRYPT},
+            {"decrypt", COMMAND_TYPE::DECRYPT},
+            {"checksum", COMMAND_TYPE::CHECKSUM},
+        };
+        auto it = mapping.find(token);
+        if (it != mapping.end()) {
+            cmd = it->second;
+        } else {
+            throw po::validation_error(po::validation_error::invalid_option_value, "command");
+        }
+        return in;
+    }
 
     std::string inputFile_;
     std::string outputFile_;
     std::string password_;
 
-    boost::program_options::options_description desc_;
+    po::options_description desc_;
+    po::variables_map vm_;
+    bool helpRequested_ = false;
 };
 
 }  // namespace CryptoGuard
